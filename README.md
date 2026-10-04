@@ -4,7 +4,7 @@ A tiny dashboard that shows **every service of your homelab, with the ones the s
 
 Services come from three places, merged in this order:
 
-1. **Docker labels** (Dynacat/Glance style: `dynacat.name`, `dynacat.url`, `dynacat.icon`, `dynacat.description`, `dynacat.parent`). New containers appear by themselves.
+1. **Docker labels** (Dynacat/Glance style: `dynacat.name`, `dynacat.url`, `dynacat.icon`, `dynacat.description`). A container needs a name and a URL to get a tile, so databases and exporters are ignored. New containers appear by themselves.
 2. **Authelia's own rules** (forward-auth domains and OIDC clients), exported to a small JSON file. This gives the allowed groups with nothing to maintain, and also lists services that have no label.
 3. **`overrides.yml`** for what neither can know (apps with their own login, LAN-only apps, hidden services).
 

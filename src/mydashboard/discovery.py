@@ -25,13 +25,14 @@ def _normalize_url(url: str) -> str:
 
 
 def parse_containers(containers: list[dict], prefix: str = "dynacat") -> list[DockerService]:
-    """Keep top-level, labelled containers that have a URL (sub-containers have a `parent`)."""
+    """Keep labelled containers that have a URL. `parent` only groups tiles in Dynacat, so it is ignored;
+    databases, caches and exporters are dropped because they have no URL."""
     out: list[DockerService] = []
     for c in containers:
         labels = c.get("Labels") or {}
         name = labels.get(f"{prefix}.name")
         url = labels.get(f"{prefix}.url")
-        if not name or not url or labels.get(f"{prefix}.parent"):
+        if not name or not url:
             continue
         out.append(
             DockerService(

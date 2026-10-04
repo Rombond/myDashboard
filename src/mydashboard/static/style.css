@@ -25,3 +25,9 @@ a.card:hover, a.card:focus-visible { border-color: var(--accent); outline: none;
 .off strong { text-decoration: line-through; }
 .off .lock { color: #c0392b; }
 .empty { grid-column: 1 / -1; text-align: center; color: var(--muted); }
+
+.badge.lock { top: auto; bottom: 6px; }
+.card img { border-radius: 8px; }
+@media (prefers-color-scheme: dark) {
+  .card img { background: rgba(255, 255, 255, .92); padding: 3px; }
+}

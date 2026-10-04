@@ -83,12 +83,13 @@ def test_view_sorts_allowed_first():
     assert [r["name"] for r in rows] == ["Zzz", "Aaa"]
 
 
-def test_parse_containers_skips_children_and_urlless():
+def test_parse_containers_keeps_children_with_a_url_and_drops_urlless():
     cs = [
         {"Names": ["/a"], "Labels": {"dynacat.name": "A", "dynacat.url": "a.lan:1"}},
+        {"Names": ["/child"], "Labels": {"dynacat.name": "Child", "dynacat.parent": "a", "dynacat.url": "http://c/"}},
         {"Names": ["/db"], "Labels": {"dynacat.name": "DB", "dynacat.parent": "a"}},
         {"Names": ["/b"], "Labels": {"dynacat.name": "B"}},
         {"Names": ["/c"], "Labels": {}},
     ]
     out = parse_containers(cs)
-    assert [(s.name, s.url) for s in out] == [("A", "http://a.lan:1")]
+    assert [(s.name, s.url) for s in out] == [("A", "http://a.lan:1"), ("Child", "http://c/")]
