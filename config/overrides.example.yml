@@ -13,6 +13,10 @@ lan_hosts: [nas.lan]
 # Show only services reachable through your reverse proxy: drop tiles whose URL is a LAN address.
 public_only: false
 
+# List only services that sign in through your SSO: matched Authelia entries count automatically,
+# apps that use LDAP directly need `sso: true` in `services` below.
+sso_only: false
+
 # Services to hide from everyone.
 hide: [reverse-proxy, fail2ban]
 
@@ -21,6 +25,7 @@ hide: [reverse-proxy, fail2ban]
 services:
   jellyfin:
     groups: [family, users, admins]          # access is an LDAP filter inside Jellyfin, not an Authelia rule
+    sso: true                                # logs in against LDAP, so it counts for `sso_only`
     url: https://jellyfin.example.com/       # public address instead of nas.lan:8096
   esphome:
     groups: [admins]

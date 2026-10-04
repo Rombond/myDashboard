@@ -102,3 +102,13 @@ def test_public_only_drops_lan_services_but_keeps_those_with_a_public_url():
     assert "sonarr" not in keys
     assert {"immich", "wiki"} <= keys  # Immich is rewritten to its public Authelia URL
     assert "sonarr" in {s.key for s in build_catalog(docker, ENTRIES, ov())}
+
+
+def test_sso_only_keeps_authelia_ldap_flagged_and_drops_the_rest():
+    docker = [svc("Immich", "http://server.brebond:2283/"),      # Authelia OIDC client
+              svc("Jellyfin", "https://jf.example.com/"),        # LDAP, flagged by override
+              svc("Vault", "https://vault.example.com/")]        # own login
+    o = ov(sso_only=True, services={"jellyfin": {"sso": True, "groups": ["family"]}})
+    keys = {s.key for s in build_catalog(docker, ENTRIES, o)}
+    assert keys == {"immich", "jellyfin", "openwebui", "shelfmark"}  # unlabelled Authelia entries count as SSO
+    assert "vault" in {s.key for s in build_catalog(docker, ENTRIES, ov())}

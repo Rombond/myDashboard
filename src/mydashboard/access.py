@@ -26,6 +26,7 @@ class Service:
     source: str  # docker | authelia | override | extra
     lan: bool = False
     always: list[str] = field(default_factory=list)
+    sso: bool = False  # signs in through Authelia (forward auth / OIDC) or LDAP
 
     def allowed_for(self, user_groups: set[str]) -> bool:
         if ANY in self.groups:
@@ -81,7 +82,7 @@ def build_catalog(docker: list[DockerService], entries: list[dict], ov: Override
         add(Service(key, o.get("name", d.name), url, o.get("icon", d.icon),
                     o.get("description", d.description), list(groups),
                     "authelia" if entry and not o.get("groups") else "docker",
-                    _is_lan(url, ov.lan_hosts), ov.always_allow))
+                    _is_lan(url, ov.lan_hosts), ov.always_allow, bool(o.get("sso", entry is not None))))
 
     # Authelia knows services that carry no container label (e.g. Shelfmark, CWA).
     for e in entries:
@@ -91,15 +92,16 @@ def build_catalog(docker: list[DockerService], entries: list[dict], ov: Override
         o = ov.services.get(key) or ov.services.get(norm(e["id"])) or {}
         add(Service(key, o.get("name", e["name"]), o.get("url", e["url"]), o.get("icon"),
                     o.get("description", ""), list(o.get("groups") or e["groups"]),
-                    "authelia", False, ov.always_allow))
+                    "authelia", False, ov.always_allow, bool(o.get("sso", True))))
 
     for x in ov.extra:
         key = norm(x["name"])
         add(Service(key, x["name"], x["url"], x.get("icon"), x.get("description", ""),
                     list(x.get("groups") or ov.default_groups), "extra",
-                    _is_lan(x["url"], ov.lan_hosts), ov.always_allow))
+                    _is_lan(x["url"], ov.lan_hosts), ov.always_allow, bool(x.get("sso", False))))
 
-    services = [s for s in out.values() if not (ov.public_only and s.lan)]
+    services = [s for s in out.values()
+                if not (ov.public_only and s.lan) and not (ov.sso_only and not s.sso)]
     return sorted(services, key=lambda s: s.name.lower())
 
 

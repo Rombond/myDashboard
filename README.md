@@ -6,7 +6,7 @@ Services come from three places, merged in this order:
 
 1. **Docker labels** (Dynacat/Glance style: `dynacat.name`, `dynacat.url`, `dynacat.icon`, `dynacat.description`). A container needs a name and a URL to get a tile, so databases and exporters are ignored. New containers appear by themselves.
 2. **Authelia's own rules** (forward-auth domains and OIDC clients), exported to a small JSON file. This gives the allowed groups with nothing to maintain, and also lists services that have no label.
-3. **`overrides.yml`** for what neither can know (apps with their own login, LAN-only apps, hidden services). Set `public_only: true` to drop LAN-only tiles and list only what your reverse proxy serves.
+3. **`overrides.yml`** for what neither can know (apps with their own login, LAN-only apps, hidden services). Set `public_only: true` to drop LAN-only tiles and `sso_only: true` to list only services that use your SSO (Authelia entries count automatically; LDAP apps need `sso: true`).
 
 Anything without a rule falls back to `default_groups`, so a new service is never open by accident.
 
