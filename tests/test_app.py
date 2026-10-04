@@ -71,3 +71,9 @@ def test_service_links_open_in_a_new_tab(client):
 def test_new_tab_checkbox_defaults_to_checked(client):
     html = client.get("/", headers={"Remote-User": "u", "Remote-Groups": "medias"}).get_data(as_text=True)
     assert 'id="newtab" checked' in html and "mydashboard.newtab" in html
+
+
+def test_theme_switch_is_in_the_menu(client):
+    html = client.get("/", headers={"Remote-User": "u", "Remote-Groups": "medias"}).get_data(as_text=True)
+    assert all(f'name="theme" value="{v}"' in html for v in ("auto", "light", "dark"))
+    assert "mydashboard.theme" in html

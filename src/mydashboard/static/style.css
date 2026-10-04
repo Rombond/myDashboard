@@ -1,9 +1,17 @@
 :root {
   --bg: #f4f5f7; --card: #fff; --fg: #1c1e21; --muted: #6b7280; --line: #e3e5e8; --accent: #3b82f6;
-  color-scheme: light dark;
+  --chip: transparent; --chip-pad: 0;
+  color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
-  :root { --bg: #111317; --card: #1a1d23; --fg: #e8eaed; --muted: #9aa0a6; --line: #2a2e36; }
+  :root:not([data-theme="light"]) {
+    --bg: #111317; --card: #1a1d23; --fg: #e8eaed; --muted: #9aa0a6; --line: #2a2e36;
+    --chip: rgba(255, 255, 255, .92); --chip-pad: 3px; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111317; --card: #1a1d23; --fg: #e8eaed; --muted: #9aa0a6; --line: #2a2e36;
+  --chip: rgba(255, 255, 255, .92); --chip-pad: 3px; color-scheme: dark;
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.4 system-ui, sans-serif; }
@@ -27,10 +35,7 @@ a.card:hover, a.card:focus-visible { border-color: var(--accent); outline: none;
 .empty { grid-column: 1 / -1; text-align: center; color: var(--muted); }
 
 .badge.lock { top: auto; bottom: 6px; }
-.card img { border-radius: 8px; }
-@media (prefers-color-scheme: dark) {
-  .card img { background: rgba(255, 255, 255, .92); padding: 3px; }
-}
+.card img { border-radius: 8px; background: var(--chip); padding: var(--chip-pad); }
 
 header { position: relative; }
 .me { position: relative; }
@@ -52,3 +57,10 @@ header { position: relative; }
 .menu .opt { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 8px; cursor: pointer; }
 .menu .opt:hover { background: var(--line); }
 .menu .opt input { accent-color: var(--accent); width: 16px; height: 16px; }
+
+.theme { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 4px 10px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg label { padding: 4px 10px; font-size: .8rem; cursor: pointer; color: var(--muted); }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg label:has(input:checked) { background: var(--accent); color: #fff; }
+.seg label:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: -2px; }

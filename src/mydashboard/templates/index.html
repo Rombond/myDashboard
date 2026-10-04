@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ title }}</title>
+  <script>try { const t = localStorage.getItem('mydashboard.theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}</script>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
@@ -19,6 +20,13 @@
           <div><strong>{{ user.name }}</strong><small>@{{ user.user }}</small>{% if user.email %}<small>{{ user.email }}</small>{% endif %}</div>
         </div>
         {% if user.groups %}<div class="groups">{% for g in user.groups|sort %}<span>{{ g }}</span>{% endfor %}</div>{% endif %}
+        <div class="theme"><span>Theme</span>
+          <span class="seg" role="radiogroup" aria-label="Theme">
+            <label><input type="radio" name="theme" value="auto" checked>Auto</label>
+            <label><input type="radio" name="theme" value="light">Light</label>
+            <label><input type="radio" name="theme" value="dark">Dark</label>
+          </span>
+        </div>
         <label class="opt"><input type="checkbox" id="newtab" checked> Open apps in a new tab</label>
         {% if account.settings_url %}<a href="{{ account.settings_url }}" rel="noopener">Account settings</a>{% endif %}
         {% if account.logout_url %}<a class="out" href="{{ account.logout_url }}">Log out</a>{% endif %}
@@ -44,6 +52,15 @@
     {% if not services %}<p class="empty">No services found.</p>{% endif %}
   </main>
   <script>
+    // Theme: auto follows the OS; light/dark are forced. Saved per browser.
+    const TKEY = 'mydashboard.theme';
+    const setTheme = v => { if (v === 'light' || v === 'dark') document.documentElement.dataset.theme = v; else delete document.documentElement.dataset.theme; };
+    let saved = 'auto';
+    try { saved = localStorage.getItem(TKEY) || 'auto'; } catch (e) {}
+    document.querySelectorAll('input[name=theme]').forEach(r => {
+      r.checked = r.value === saved;
+      r.addEventListener('change', () => { setTheme(r.value); try { localStorage.setItem(TKEY, r.value); } catch (e) {} });
+    });
     // Per-browser preference; links default to a new tab (also when JS or storage is unavailable).
     const nt = document.getElementById('newtab');
     const KEY = 'mydashboard.newtab';
