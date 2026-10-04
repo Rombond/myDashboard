@@ -66,3 +66,8 @@ def test_account_menu_without_portal_url_has_no_links(client):
 def test_service_links_open_in_a_new_tab(client):
     html = client.get("/", headers={"Remote-User": "u", "Remote-Groups": "medias"}).get_data(as_text=True)
     assert 'href="https://shelfmark.example.com/" target="_blank" rel="noopener noreferrer"' in html
+
+
+def test_new_tab_checkbox_defaults_to_checked(client):
+    html = client.get("/", headers={"Remote-User": "u", "Remote-Groups": "medias"}).get_data(as_text=True)
+    assert 'id="newtab" checked' in html and "mydashboard.newtab" in html

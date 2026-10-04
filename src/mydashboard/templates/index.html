@@ -19,6 +19,7 @@
           <div><strong>{{ user.name }}</strong><small>@{{ user.user }}</small>{% if user.email %}<small>{{ user.email }}</small>{% endif %}</div>
         </div>
         {% if user.groups %}<div class="groups">{% for g in user.groups|sort %}<span>{{ g }}</span>{% endfor %}</div>{% endif %}
+        <label class="opt"><input type="checkbox" id="newtab" checked> Open apps in a new tab</label>
         {% if account.settings_url %}<a href="{{ account.settings_url }}" rel="noopener">Account settings</a>{% endif %}
         {% if account.logout_url %}<a class="out" href="{{ account.logout_url }}">Log out</a>{% endif %}
       </div>
@@ -43,6 +44,18 @@
     {% if not services %}<p class="empty">No services found.</p>{% endif %}
   </main>
   <script>
+    // Per-browser preference; links default to a new tab (also when JS or storage is unavailable).
+    const nt = document.getElementById('newtab');
+    const KEY = 'mydashboard.newtab';
+    const applyTab = on => document.querySelectorAll('a.card').forEach(a => {
+      if (on) { a.target = '_blank'; a.rel = 'noopener noreferrer'; } else { a.removeAttribute('target'); }
+    });
+    try { nt.checked = localStorage.getItem(KEY) !== '0'; } catch (e) {}
+    applyTab(nt.checked);
+    nt.addEventListener('change', () => {
+      try { localStorage.setItem(KEY, nt.checked ? '1' : '0'); } catch (e) {}
+      applyTab(nt.checked);
+    });
     document.addEventListener('click', e => { const m = document.getElementById('me'); if (!m.contains(e.target)) m.open = false; });
     const q = document.getElementById('q');
     q.addEventListener('input', () => {

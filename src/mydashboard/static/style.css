@@ -48,3 +48,7 @@ header { position: relative; }
 .menu a { display: block; padding: 8px 10px; border-radius: 8px; color: inherit; text-decoration: none; }
 .menu a:hover { background: var(--line); }
 .menu a.out { color: #e5484d; }
+
+.menu .opt { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 8px; cursor: pointer; }
+.menu .opt:hover { background: var(--line); }
+.menu .opt input { accent-color: var(--accent); width: 16px; height: 16px; }
