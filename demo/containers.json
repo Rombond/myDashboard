@@ -1,0 +1,113 @@
+[
+  {
+    "Names": [
+      "/jellyfin"
+    ],
+    "Labels": {
+      "dynacat.name": "Jellyfin",
+      "dynacat.url": "https://media.example.com/",
+      "dynacat.icon": "di:jellyfin",
+      "dynacat.description": "Movies & shows"
+    }
+  },
+  {
+    "Names": [
+      "/immich"
+    ],
+    "Labels": {
+      "dynacat.name": "Immich",
+      "dynacat.url": "http://nas.lan:2283/",
+      "dynacat.icon": "di:immich",
+      "dynacat.description": "Photo backup"
+    }
+  },
+  {
+    "Names": [
+      "/paperless"
+    ],
+    "Labels": {
+      "dynacat.name": "Paperless",
+      "dynacat.url": "https://docs.example.com/",
+      "dynacat.icon": "di:paperless-ngx",
+      "dynacat.description": "Document archive"
+    }
+  },
+  {
+    "Names": [
+      "/gitea"
+    ],
+    "Labels": {
+      "dynacat.name": "Gitea",
+      "dynacat.url": "https://git.example.com/",
+      "dynacat.icon": "di:gitea",
+      "dynacat.description": "Git hosting"
+    }
+  },
+  {
+    "Names": [
+      "/vaultwarden"
+    ],
+    "Labels": {
+      "dynacat.name": "Vaultwarden",
+      "dynacat.url": "https://vault.example.com/",
+      "dynacat.icon": "di:vaultwarden",
+      "dynacat.description": "Password manager"
+    }
+  },
+  {
+    "Names": [
+      "/homeassistant"
+    ],
+    "Labels": {
+      "dynacat.name": "Home Assistant",
+      "dynacat.url": "https://home.example.com/",
+      "dynacat.icon": "di:home-assistant",
+      "dynacat.description": "Home automation"
+    }
+  },
+  {
+    "Names": [
+      "/grafana"
+    ],
+    "Labels": {
+      "dynacat.name": "Grafana",
+      "dynacat.url": "http://nas.lan:3000/",
+      "dynacat.icon": "di:grafana",
+      "dynacat.description": "Dashboards"
+    }
+  },
+  {
+    "Names": [
+      "/sonarr"
+    ],
+    "Labels": {
+      "dynacat.name": "Sonarr",
+      "dynacat.url": "http://nas.lan:8989/",
+      "dynacat.icon": "di:sonarr",
+      "dynacat.description": "TV manager"
+    }
+  },
+  {
+    "Names": [
+      "/adguard"
+    ],
+    "Labels": {
+      "dynacat.name": "AdGuard Home",
+      "dynacat.url": "http://nas.lan:3001/",
+      "dynacat.icon": "di:adguard-home",
+      "dynacat.description": "DNS ad blocker"
+    }
+  },
+  {
+    "Names": [
+      "/postgres"
+    ],
+    "Labels": {
+      "dynacat.name": "Postgres",
+      "dynacat.url": "",
+      "dynacat.icon": "si:postgresql",
+      "dynacat.description": "",
+      "dynacat.parent": "paperless"
+    }
+  }
+]

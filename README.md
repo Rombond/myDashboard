@@ -1,54 +1,100 @@
 # myDashboard
 
-A tiny dashboard that shows **every service of your homelab, with the ones the signed-in user may not use crossed out**. It sits behind [Authelia](https://www.authelia.com/) (forward auth) and needs no database.
+A small dashboard for a homelab behind [Authelia](https://www.authelia.com/). It shows **every service you run, and crosses out the ones the signed-in person is not allowed to use**, so each user sees what exists and what they can open.
 
-Services come from three places, merged in this order:
+| Dark | Light |
+|---|---|
+| ![Dark theme](docs/img/screenshot-dark.png) | ![Light theme](docs/img/screenshot-light.png) |
 
-1. **Docker labels** (Dynacat/Glance style: `dynacat.name`, `dynacat.url`, `dynacat.icon`, `dynacat.description`). A container needs a name and a URL to get a tile, so databases and exporters are ignored. New containers appear by themselves.
-2. **Authelia's own rules** (forward-auth domains and OIDC clients), exported to a small JSON file. This gives the allowed groups with nothing to maintain, and also lists services that have no label.
-3. **`overrides.yml`** for what neither can know (apps with their own login, LAN-only apps, hidden services). Set `public_only: true` to drop LAN-only tiles and `sso_only: true` to list only services that use your SSO (Authelia entries count automatically; LDAP apps need `sso: true`).
+*(demo data: `python -m mydashboard.demo`)*
 
-Anything without a rule falls back to `default_groups`, so a new service is never open by accident.
+## Why
 
-## How it decides
+Dashboards like Homepage, Glance or Dynacat are great at listing services, but they show the same page to everyone. Authelia already knows who may use what. myDashboard connects the two: services are discovered from your Docker labels, access rules are read from your Authelia setup, and the page adapts to the person looking at it.
 
-For each service: `overrides` groups, else the matching Authelia entry (matched by host or by name), else `default_groups`. A user sees a tile as usable when one of their groups (from Authelia's `Remote-Groups` header) is allowed, or when they are in `always_allow`. A service whose label URL is a LAN address is shown with its public URL if Authelia knows one.
+## Features
 
-## Run
+- **Auto-discovery** from container labels (Dynacat/Glance style `dynacat.name`, `dynacat.url`, `dynacat.icon`, `dynacat.description`).
+- **Per-user view**: tiles the user cannot open are greyed out and crossed out, with a tooltip saying which groups would give access.
+- **Access rules come from Authelia** (forward-auth rules and OIDC clients), with no extra labels to maintain. A small `overrides.yml` covers what Authelia cannot know (apps that use LDAP directly, LAN-only apps, hidden services).
+- **Safe defaults**: a service with no known rule is only open to `default_groups` (admins unless you say otherwise).
+- Options to list **only public** services and/or **only services that use your SSO**.
+- Account menu: who you are, your groups, links to your Authelia settings and logout, theme switch (auto, light, dark) and an "open in a new tab" checkbox, both saved in the browser.
+- No database, one small container, a few hundred lines of Python.
+
+## How it works
+
+```
+Docker labels ──(read-only socket proxy)──┐
+Authelia configuration ──(export, sanitized)──► merge ──► page for the user in Remote-Groups
+overrides.yml (your exceptions) ──────────┘
+```
+
+Details in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Every setting is listed in [docs/CONFIGURATION.md](docs/CONFIGURATION.md).
+
+## Quick start
+
+Try it without Docker or Authelia (fake data from `demo/`):
 
 ```bash
-cp config/overrides.example.yml config/overrides.yml
+pip install -r requirements.txt
+PYTHONPATH=src python -m mydashboard.demo --user alice --groups family
+# open http://127.0.0.1:8080
+```
+
+Run it for real:
+
+```bash
+cp config/overrides.example.yml config/overrides.yml     # edit it
 mkdir -p data
-# Export the rules (the dashboard never reads Authelia's config itself, only this sanitized file):
 PYTHONPATH=src python3 -m mydashboard.authelia_export /path/to/authelia/configuration.yml data/rules.json
 docker compose -f docker-compose.example.yml up -d
 ```
 
-See [docs/DEPLOY.md](docs/DEPLOY.md) for the reverse-proxy and Authelia side.
+Then put it behind Authelia in your reverse proxy: see [docs/DEPLOY.md](docs/DEPLOY.md).
 
-## Configuration (environment)
+## Requirements
 
-| Variable | Default | Meaning |
-|---|---|---|
-| `DOCKER_HOST` | `http://docker-socket-proxy:2375` | Docker API endpoint (use a read-only proxy) |
-| `RULES_FILE` | `/data/rules.json` | Output of `authelia_export` |
-| `OVERRIDES_FILE` | `/config/overrides.yml` | Optional exceptions |
-| `CACHE_SECONDS` | `30` | How long the merged list is cached |
-| `DASHBOARD_TITLE` | `Services` | Page title |
-| `LABEL_PREFIX` | `dynacat` | Label namespace to read |
-| `TRUST_TOKEN` | empty | If set, requests must carry `X-Dashboard-Token: <value>` (set it in your proxy) |
-| `DEV_MODE` | empty | `1` = act as a dev user when no `Remote-User` header is sent |
+- Authelia in front of the reverse proxy (`forward_auth`), sending the `Remote-User`, `Remote-Groups`, `Remote-Name` and `Remote-Email` headers.
+- Docker, and containers labelled with `dynacat.name` and `dynacat.url` (any container without both is ignored).
+- Python 3.11+ and PyYAML on the machine that runs the Authelia export (the exporter is a plain script, so a cron job is enough).
 
-## Security notes
+## Security model, in short
 
-- Identity is taken from `Remote-User` / `Remote-Groups`, so the dashboard must only be reachable through the proxy that runs Authelia. Do not publish its port; use `TRUST_TOKEN` if other hosts can reach it.
-- The page is a list of links. Access is still enforced by Authelia and by each app.
-- The Docker socket is never mounted into the dashboard. Use `docker-socket-proxy` with `CONTAINERS=1` only.
+- The dashboard **trusts the `Remote-*` headers**, so it must only be reachable through your authenticated proxy. Do not publish its port. `TRUST_TOKEN` adds a shared secret between the proxy and the dashboard.
+- It is **a list of links**. Authelia and each app still enforce access. Crossing a tile out does not protect anything by itself.
+- It never reads Authelia's configuration at runtime (that file holds your OIDC signing key). A separate export step writes only domains and group names.
+- It never gets the Docker socket, only the container list through [docker-socket-proxy](https://github.com/Tecnativa/docker-socket-proxy).
+
+Read [SECURITY.md](SECURITY.md) before exposing it.
+
+## Built with AI ("vibe coded")
+
+This project was **written with an AI coding assistant (Claude Code)**, steered by a human who described what they wanted, read the results and tested them on a real homelab. It is not a hand-audited codebase. In practice that means:
+
+- It works for the author's setup and has unit tests (`pytest`), but it has **not had an independent security review**.
+- Some design choices were made quickly. Expect rough edges, and read the code before you trust it with anything sensitive.
+- The tests, lint (`ruff`) and a demo mode are there so you can check behaviour yourself, and issues and pull requests are welcome.
+
+If AI-assisted code is not for you, that is a fair call. Nothing is hidden: every change is in the git history.
+
+## Limitations
+
+- Rules come from a snapshot of Authelia's config (`rules.json`). Re-run the export when your rules change (a cron every few minutes works).
+- Only simple Authelia subjects are understood: `group:<name>` and "any signed-in user". AND-combinations and `user:` subjects are ignored (the export notes them).
+- Authelia cannot tell the dashboard which apps use LDAP or their own login, hence the overrides file.
+- Icons are loaded by the visitor's browser from public CDNs (`jsdelivr`, `simpleicons`). Point `icon` at your own URL if that matters to you.
 
 ## Develop
 
 ```bash
 pip install -r requirements-dev.txt
-python -m pytest -q
-DEV_MODE=1 PYTHONPATH=src python -m mydashboard.app
+ruff check . && python -m pytest -q
+PYTHONPATH=src python -m mydashboard.demo
 ```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## License
+
+[MIT](LICENSE)

@@ -4,9 +4,9 @@ CONFIG = {
     "access_control": {
         "default_policy": "deny",
         "rules": [
-            {"domain": ["server.brebond"], "subject": "group:admins", "policy": "two_factor"},
-            {"domain": ["books.brebond.com"],
-             "subject": ["group:medias", "group:canada", "group:admins"], "policy": "two_factor"},
+            {"domain": ["nas.lan"], "subject": "group:admins", "policy": "two_factor"},
+            {"domain": ["books.example.com"],
+             "subject": ["group:media", "group:users", "group:admins"], "policy": "two_factor"},
         ],
     },
     "identity_providers": {"oidc": {
@@ -16,7 +16,7 @@ CONFIG = {
         },
         "clients": [
             {"client_id": "wishlist", "client_name": "Wishlist", "authorization_policy": "family",
-             "redirect_uris": ["https://souhait.brebond.com/login"]},
+             "redirect_uris": ["https://wishlist.example.com/login"]},
             {"client_id": "plain", "redirect_uris": ["http://lan:1/cb", "https://plain.example.com/cb"]},
         ],
     }},
@@ -26,9 +26,9 @@ CONFIG = {
 def test_forward_auth_and_oidc_entries():
     data = export_rules(CONFIG)
     by_id = {e["id"]: e for e in data["entries"]}
-    assert by_id["books.brebond.com"]["groups"] == ["admins", "canada", "medias"]
+    assert by_id["books.example.com"]["groups"] == ["admins", "media", "users"]
     assert by_id["wishlist"]["groups"] == ["admins", "family"]
-    assert by_id["wishlist"]["host"] == "souhait.brebond.com"
+    assert by_id["wishlist"]["host"] == "wishlist.example.com"
     assert by_id["plain"]["groups"] == ["*"]  # built-in two_factor: any authenticated user
     assert by_id["plain"]["host"] == "plain.example.com"  # first https redirect only
 

@@ -1,0 +1,21 @@
+# Demo configuration: fake services on example.com.
+default_groups: [admins]
+always_allow: [admins]
+lan_hosts: [nas.lan]
+sso_only: false
+public_only: false
+auth_url: https://auth.example.com
+public_url: https://apps.example.com
+hide: [postgres]
+services:
+  jellyfin:
+    groups: [family, devs, admins]   # signs in with LDAP, so Authelia can't tell us who may use it
+    sso: true
+  homeassistant:
+    groups: [admins]
+  grafana:
+    groups: [devs, admins]
+  books:
+    name: Calibre-Web
+    icon: di:calibre-web
+    description: E-book library

@@ -8,3 +8,10 @@ dependencies = ["Flask>=3.0", "PyYAML>=6.0"]
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 120
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["F", "E", "W", "I", "B", "UP", "SIM"]

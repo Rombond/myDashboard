@@ -1,0 +1,50 @@
+{
+  "generated": 0,
+  "notes": [],
+  "entries": [
+    {
+      "id": "immich",
+      "name": "Immich",
+      "host": "photos.example.com",
+      "url": "https://photos.example.com/",
+      "groups": [
+        "family",
+        "admins"
+      ],
+      "source": "oidc"
+    },
+    {
+      "id": "paperless",
+      "name": "Paperless",
+      "host": "docs.example.com",
+      "url": "https://docs.example.com/",
+      "groups": [
+        "family",
+        "admins"
+      ],
+      "source": "oidc"
+    },
+    {
+      "id": "gitea",
+      "name": "Gitea",
+      "host": "git.example.com",
+      "url": "https://git.example.com/",
+      "groups": [
+        "devs",
+        "admins"
+      ],
+      "source": "oidc"
+    },
+    {
+      "id": "books.example.com",
+      "name": "Books",
+      "host": "books.example.com",
+      "url": "https://books.example.com/",
+      "groups": [
+        "family",
+        "admins"
+      ],
+      "source": "forward_auth"
+    }
+  ]
+}

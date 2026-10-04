@@ -5,7 +5,6 @@ from __future__ import annotations
 import hmac
 import logging
 import time
-
 from urllib.parse import quote
 
 from flask import Flask, abort, jsonify, render_template, request
@@ -56,7 +55,7 @@ def create_app(settings: Settings | None = None) -> Flask:
             abort(403)
         user = request.headers.get("Remote-User")
         if not user and settings.dev_mode:
-            return {"user": "dev", "name": "Dev", "groups": {"canada"}, "email": "dev@example.com"}
+            return {"user": "dev", "name": "Dev", "groups": {"admins"}, "email": "dev@example.com"}
         if not user:
             abort(401)
         groups = {g.strip() for g in request.headers.get("Remote-Groups", "").split(",") if g.strip()}

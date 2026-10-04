@@ -21,7 +21,7 @@ class Settings:
     label_prefix: str = "dynacat"
 
     @classmethod
-    def from_env(cls) -> "Settings":
+    def from_env(cls) -> Settings:
         e = os.environ.get
         return cls(
             docker_host=e("DOCKER_HOST", cls.docker_host).replace("tcp://", "http://"),
@@ -39,7 +39,7 @@ class Settings:
 class Overrides:
     """Hand-written exceptions: what Docker labels and Authelia cannot tell us."""
 
-    default_groups: list[str] = field(default_factory=lambda: ["canada", "admins"])
+    default_groups: list[str] = field(default_factory=lambda: ["admins"])
     always_allow: list[str] = field(default_factory=lambda: ["admins"])
     lan_hosts: list[str] = field(default_factory=list)
     public_only: bool = False
