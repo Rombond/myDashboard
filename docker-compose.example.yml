@@ -1,0 +1,23 @@
+services:
+  dashboard:
+    image: ghcr.io/OWNER/mydashboard:latest
+    restart: unless-stopped
+    ports:
+      - "8080:8080"                          # reached by your reverse proxy; do not expose publicly
+    environment:
+      DOCKER_HOST: http://docker-socket-proxy:2375
+      DASHBOARD_TITLE: Services
+      # TRUST_TOKEN: change-me               # optional: your proxy must then send X-Dashboard-Token
+    volumes:
+      - ./config:/config:ro                  # overrides.yml
+      - ./data:/data:ro                      # rules.json (written by the exporter)
+    depends_on: [docker-socket-proxy]
+
+  docker-socket-proxy:
+    image: tecnativa/docker-socket-proxy:latest
+    restart: unless-stopped
+    environment:
+      CONTAINERS: 1                          # read the container list only
+      POST: 0
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro

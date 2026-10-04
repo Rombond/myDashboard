@@ -1,0 +1,30 @@
+# Copy to overrides.yml. Only list what Docker labels and Authelia cannot tell the dashboard.
+# Names are matched loosely: "Open WebUI" == "open-webui" == "openwebui".
+
+# Groups that may use a service when nothing else says (no Authelia rule, no override).
+default_groups: [users, admins]
+
+# These groups can always open every service.
+always_allow: [admins]
+
+# Hosts that only exist on your LAN. They never match an Authelia rule, and their tiles get a LAN badge.
+lan_hosts: [nas.lan]
+
+# Services to hide from everyone.
+hide: [reverse-proxy, fail2ban]
+
+# Per-service exceptions. Any of: groups, url, name, icon, description.
+# groups: ["*"] means "any signed-in user".
+services:
+  jellyfin:
+    groups: [family, users, admins]          # access is an LDAP filter inside Jellyfin, not an Authelia rule
+    url: https://jellyfin.example.com/       # public address instead of nas.lan:8096
+  esphome:
+    groups: [admins]
+
+# Services that have no container label and no Authelia entry.
+extra:
+  - name: Router
+    url: http://192.168.1.1/
+    icon: sh:openwrt
+    groups: [admins]

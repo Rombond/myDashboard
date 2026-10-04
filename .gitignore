@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+# Instance-specific files (never commit)
+config/overrides.yml
+data/
