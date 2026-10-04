@@ -44,6 +44,8 @@ class Overrides:
     lan_hosts: list[str] = field(default_factory=list)
     public_only: bool = False
     sso_only: bool = False
+    auth_url: str = ""      # Authelia portal, e.g. https://auth.example.com (enables the account menu links)
+    public_url: str = ""    # this dashboard's address, where logout sends you back
     hide: list[str] = field(default_factory=list)
     # normalized service name -> {groups, url, name, icon, description}
     services: dict[str, dict] = field(default_factory=dict)
@@ -66,6 +68,8 @@ def load_overrides(path: str) -> Overrides:
     o.lan_hosts = list(data.get("lan_hosts", []))
     o.public_only = bool(data.get("public_only", False))
     o.sso_only = bool(data.get("sso_only", False))
+    o.auth_url = str(data.get("auth_url", "")).rstrip("/")
+    o.public_url = str(data.get("public_url", "")).rstrip("/")
     o.hide = [norm(x) for x in data.get("hide", [])]
     o.services = {norm(k): (v or {}) for k, v in (data.get("services") or {}).items()}
     o.extra = list(data.get("extra", []))

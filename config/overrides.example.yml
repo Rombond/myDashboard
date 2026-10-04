@@ -17,6 +17,11 @@ public_only: false
 # apps that use LDAP directly need `sso: true` in `services` below.
 sso_only: false
 
+# Account menu (avatar in the header): links to your Authelia portal and back to this dashboard.
+# Leave empty to hide the "Account settings" and "Log out" links.
+auth_url: https://auth.example.com
+public_url: https://apps.example.com
+
 # Services to hide from everyone.
 hide: [reverse-proxy, fail2ban]
 

@@ -6,10 +6,12 @@ import hmac
 import logging
 import time
 
+from urllib.parse import quote
+
 from flask import Flask, abort, jsonify, render_template, request
 
 from .access import build_catalog, load_rules, view_for
-from .config import Settings, load_overrides
+from .config import Overrides, Settings, load_overrides
 from .discovery import fetch_containers, parse_containers
 
 log = logging.getLogger("mydashboard")
@@ -22,6 +24,7 @@ class Catalog:
         self.settings = settings
         self._at = 0.0
         self._services = []
+        self.overrides = Overrides()
 
     def get(self):
         if time.monotonic() - self._at < self.settings.cache_seconds and self._services:
@@ -34,7 +37,8 @@ class Catalog:
             if self._services:
                 return self._services
             docker = []
-        self._services = build_catalog(docker, load_rules(s.rules_file), load_overrides(s.overrides_file))
+        self.overrides = load_overrides(s.overrides_file)
+        self._services = build_catalog(docker, load_rules(s.rules_file), self.overrides)
         self._at = time.monotonic()
         return self._services
 
@@ -52,11 +56,12 @@ def create_app(settings: Settings | None = None) -> Flask:
             abort(403)
         user = request.headers.get("Remote-User")
         if not user and settings.dev_mode:
-            return {"user": "dev", "name": "Dev", "groups": {"canada"}}
+            return {"user": "dev", "name": "Dev", "groups": {"canada"}, "email": "dev@example.com"}
         if not user:
             abort(401)
         groups = {g.strip() for g in request.headers.get("Remote-Groups", "").split(",") if g.strip()}
-        return {"user": user, "name": request.headers.get("Remote-Name") or user, "groups": groups}
+        return {"user": user, "name": request.headers.get("Remote-Name") or user, "groups": groups,
+                "email": request.headers.get("Remote-Email", "")}
 
     @app.get("/healthz")
     def healthz():
@@ -66,7 +71,16 @@ def create_app(settings: Settings | None = None) -> Flask:
     def index():
         u = current_user()
         rows = view_for(catalog.get(), u["groups"])
-        return render_template("index.html", title=settings.title, user=u,
+        ov = catalog.overrides
+        back = ov.public_url or request.host_url.rstrip("/")
+        words = [w for w in u["name"].replace(".", " ").split() if w]
+        initials = "".join(w[0] for w in words[:2]).upper() or u["user"][:1].upper()
+        account = {
+            "initials": initials,
+            "settings_url": f"{ov.auth_url}/settings" if ov.auth_url else "",
+            "logout_url": f"{ov.auth_url}/logout?rd={quote(back + '/', safe='')}" if ov.auth_url else "",
+        }
+        return render_template("index.html", title=settings.title, user=u, account=account,
                                services=rows, allowed=sum(r["allowed"] for r in rows))
 
     @app.get("/api/services")

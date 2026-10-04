@@ -9,8 +9,20 @@
 <body>
   <header>
     <h1>{{ title }}</h1>
-    <p class="who">{{ user.name }} · {{ allowed }} / {{ services|length }} available</p>
+    <p class="who">{{ allowed }} / {{ services|length }} available</p>
     <input id="q" type="search" placeholder="Filter…" autocomplete="off" autofocus>
+    <details class="me" id="me">
+      <summary class="avatar" title="{{ user.name }}" aria-label="Account menu">{{ account.initials }}</summary>
+      <div class="menu">
+        <div class="id">
+          <span class="avatar big">{{ account.initials }}</span>
+          <div><strong>{{ user.name }}</strong><small>@{{ user.user }}</small>{% if user.email %}<small>{{ user.email }}</small>{% endif %}</div>
+        </div>
+        {% if user.groups %}<div class="groups">{% for g in user.groups|sort %}<span>{{ g }}</span>{% endfor %}</div>{% endif %}
+        {% if account.settings_url %}<a href="{{ account.settings_url }}" rel="noopener">Account settings</a>{% endif %}
+        {% if account.logout_url %}<a class="out" href="{{ account.logout_url }}">Log out</a>{% endif %}
+      </div>
+    </details>
   </header>
   <main>
     {% for s in services %}
@@ -31,6 +43,7 @@
     {% if not services %}<p class="empty">No services found.</p>{% endif %}
   </main>
   <script>
+    document.addEventListener('click', e => { const m = document.getElementById('me'); if (!m.contains(e.target)) m.open = false; });
     const q = document.getElementById('q');
     q.addEventListener('input', () => {
       const v = q.value.trim().toLowerCase();

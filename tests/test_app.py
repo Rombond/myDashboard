@@ -44,3 +44,20 @@ def test_trust_token(tmp_path, monkeypatch):
     h = {"Remote-User": "u", "Remote-Groups": "canada"}
     assert c.get("/", headers=h).status_code == 403
     assert c.get("/", headers={**h, "X-Dashboard-Token": "s3cret"}).status_code == 200
+
+
+def test_account_menu_shows_identity_and_logout(tmp_path, monkeypatch):
+    monkeypatch.setattr("mydashboard.app.fetch_containers", lambda host: [])
+    ov = tmp_path / "o.yml"
+    ov.write_text("auth_url: https://auth.example.com/\npublic_url: https://apps.example.com\n")
+    c = create_app(Settings(rules_file=str(tmp_path / "r.json"), overrides_file=str(ov), cache_seconds=0)).test_client()
+    html = c.get("/", headers={"Remote-User": "romana", "Remote-Name": "Maman Bond",
+                               "Remote-Email": "m@example.com", "Remote-Groups": "family,medias"}).get_data(as_text=True)
+    assert ">MB<" in html and "@romana" in html and "m@example.com" in html
+    assert "https://auth.example.com/settings" in html
+    assert "https://auth.example.com/logout?rd=https%3A%2F%2Fapps.example.com%2F" in html
+
+
+def test_account_menu_without_portal_url_has_no_links(client):
+    html = client.get("/", headers={"Remote-User": "u", "Remote-Groups": "medias"}).get_data(as_text=True)
+    assert "Log out" not in html and "@u" in html
