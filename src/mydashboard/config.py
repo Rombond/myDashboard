@@ -42,6 +42,7 @@ class Overrides:
     default_groups: list[str] = field(default_factory=lambda: ["canada", "admins"])
     always_allow: list[str] = field(default_factory=lambda: ["admins"])
     lan_hosts: list[str] = field(default_factory=list)
+    public_only: bool = False
     hide: list[str] = field(default_factory=list)
     # normalized service name -> {groups, url, name, icon, description}
     services: dict[str, dict] = field(default_factory=dict)
@@ -62,6 +63,7 @@ def load_overrides(path: str) -> Overrides:
     o.default_groups = list(data.get("default_groups", o.default_groups))
     o.always_allow = list(data.get("always_allow", o.always_allow))
     o.lan_hosts = list(data.get("lan_hosts", []))
+    o.public_only = bool(data.get("public_only", False))
     o.hide = [norm(x) for x in data.get("hide", [])]
     o.services = {norm(k): (v or {}) for k, v in (data.get("services") or {}).items()}
     o.extra = list(data.get("extra", []))

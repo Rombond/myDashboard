@@ -10,6 +10,9 @@ always_allow: [admins]
 # Hosts that only exist on your LAN. They never match an Authelia rule, and their tiles get a LAN badge.
 lan_hosts: [nas.lan]
 
+# Show only services reachable through your reverse proxy: drop tiles whose URL is a LAN address.
+public_only: false
+
 # Services to hide from everyone.
 hide: [reverse-proxy, fail2ban]
 

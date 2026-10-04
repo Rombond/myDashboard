@@ -99,7 +99,8 @@ def build_catalog(docker: list[DockerService], entries: list[dict], ov: Override
                     list(x.get("groups") or ov.default_groups), "extra",
                     _is_lan(x["url"], ov.lan_hosts), ov.always_allow))
 
-    return sorted(out.values(), key=lambda s: s.name.lower())
+    services = [s for s in out.values() if not (ov.public_only and s.lan)]
+    return sorted(services, key=lambda s: s.name.lower())
 
 
 def view_for(services: list[Service], user_groups: set[str]) -> list[dict]:

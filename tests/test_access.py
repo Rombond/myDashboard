@@ -93,3 +93,12 @@ def test_parse_containers_keeps_children_with_a_url_and_drops_urlless():
     ]
     out = parse_containers(cs)
     assert [(s.name, s.url) for s in out] == [("A", "http://a.lan:1"), ("Child", "http://c/")]
+
+
+def test_public_only_drops_lan_services_but_keeps_those_with_a_public_url():
+    docker = [svc("Sonarr", "http://server.brebond:8989/"), svc("Immich", "http://server.brebond:2283/"),
+              svc("Wiki", "https://wiki.example.com/")]
+    keys = {s.key for s in build_catalog(docker, ENTRIES, ov(public_only=True))}
+    assert "sonarr" not in keys
+    assert {"immich", "wiki"} <= keys  # Immich is rewritten to its public Authelia URL
+    assert "sonarr" in {s.key for s in build_catalog(docker, ENTRIES, ov())}
