@@ -61,3 +61,8 @@ def test_account_menu_shows_identity_and_logout(tmp_path, monkeypatch):
 def test_account_menu_without_portal_url_has_no_links(client):
     html = client.get("/", headers={"Remote-User": "u", "Remote-Groups": "medias"}).get_data(as_text=True)
     assert "Log out" not in html and "@u" in html
+
+
+def test_service_links_open_in_a_new_tab(client):
+    html = client.get("/", headers={"Remote-User": "u", "Remote-Groups": "medias"}).get_data(as_text=True)
+    assert 'href="https://shelfmark.example.com/" target="_blank" rel="noopener noreferrer"' in html

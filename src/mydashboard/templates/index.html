@@ -28,7 +28,7 @@
     {% for s in services %}
       {% set tag = 'a' if s.allowed else 'div' %}
       <{{ tag }} class="card{{ '' if s.allowed else ' off' }}" data-name="{{ s.name|lower }}"
-        {% if s.allowed %}href="{{ s.url }}" rel="noopener"
+        {% if s.allowed %}href="{{ s.url }}" target="_blank" rel="noopener noreferrer"
         {% else %}aria-disabled="true" title="No access. Needs one of: {{ s.needs|join(', ') or 'an administrator' }}"{% endif %}>
         {% if s.icon %}<img src="{{ s.icon }}" alt="" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span class="ph" hidden>{{ s.name[:1]|upper }}</span>
         {% else %}<span class="ph">{{ s.name[:1]|upper }}</span>{% endif %}
