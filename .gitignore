@@ -3,5 +3,6 @@ __pycache__/
 .venv/
 .pytest_cache/
 # Instance-specific files (never commit)
-config/overrides.yml
+config/overrides.yml*
+!config/overrides.example.yml
 data/
