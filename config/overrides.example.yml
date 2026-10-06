@@ -22,6 +22,13 @@ sso_only: false
 auth_url: https://auth.example.com
 public_url: https://apps.example.com
 
+# Tracker ratio tiles, read from Prometheus. Only these groups (and always_allow) see them.
+# ratio:
+#   prometheus_url: http://prometheus:9090
+#   groups: [torrents, admins]
+#   trackers:
+#     - {name: Tracker A, metric: tracker_a}   # tracker_a_total_downloaded_bytes / tracker_a_total_uploaded_bytes
+
 # Services to hide from everyone.
 hide: [reverse-proxy, fail2ban]
 

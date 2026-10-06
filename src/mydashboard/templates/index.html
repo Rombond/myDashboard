@@ -33,6 +33,18 @@
       </div>
     </details>
   </header>
+  {% if ratios %}
+  <section class="ratios" aria-label="Tracker ratios">
+    {% for r in ratios %}
+      <div class="rcard{{ '' if r.ok else ' off' }}" data-name="{{ r.name|lower }}">
+        <strong>{{ r.name }}</strong>
+        {% if r.ok %}
+          <dl><div><dt>Down</dt><dd>{{ r.down }}</dd></div><div><dt>Up</dt><dd>{{ r.up }}</dd></div><div><dt>Ratio</dt><dd class="{{ 'low' if r.low }}">{{ r.ratio }}</dd></div></dl>
+        {% else %}<small>No data</small>{% endif %}
+      </div>
+    {% endfor %}
+  </section>
+  {% endif %}
   <main>
     {% for s in services %}
       {% set tag = 'a' if s.allowed else 'div' %}

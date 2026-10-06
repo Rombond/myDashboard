@@ -61,3 +61,21 @@ The signed-in user can use it if any of their groups (the `Remote-Groups` header
 ## What counts as "SSO"
 
 With `sso_only: true` a service stays if it matched an Authelia entry (forward auth or OIDC) or has `sso: true` in its override. Everything else is dropped.
+
+## Tracker ratios
+
+Optional section at the top of the page showing downloaded / uploaded / ratio for each private tracker, read from [Prometheus](https://prometheus.io/) (for example from tracker exporters). Only members of `groups` (and `always_allow`) get the tiles; the data is fetched by the server, so other users never receive it.
+
+```yaml
+ratio:
+  prometheus_url: http://prometheus:9090
+  groups: [torrents, admins]
+  trackers:
+    - name: Tracker A
+      metric: tracker_a        # reads tracker_a_total_downloaded_bytes and tracker_a_total_uploaded_bytes
+    - name: Tracker B
+      down: b_downloaded       # or name both metrics yourself
+      up: b_uploaded
+```
+
+Results are cached for `2 * CACHE_SECONDS`. A tracker without metrics shows "No data"; if Prometheus is unreachable every tile shows "No data". A ratio under 1 is shown in red.

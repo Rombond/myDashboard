@@ -12,6 +12,7 @@ from flask import Flask, abort, jsonify, render_template, request
 from .access import build_catalog, load_rules, view_for
 from .config import Overrides, Settings, load_overrides
 from .discovery import fetch_containers, parse_containers
+from .ratio import RatioCache
 
 log = logging.getLogger("mydashboard")
 
@@ -46,6 +47,7 @@ def create_app(settings: Settings | None = None) -> Flask:
     settings = settings or Settings.from_env()
     app = Flask(__name__)
     catalog = Catalog(settings)
+    ratios = RatioCache(settings.cache_seconds * 2)
 
     def current_user() -> dict:
         """Identity comes from Authelia's forward_auth headers (Remote-*)."""
@@ -71,6 +73,9 @@ def create_app(settings: Settings | None = None) -> Flask:
         u = current_user()
         rows = view_for(catalog.get(), u["groups"])
         ov = catalog.overrides
+        can_see_ratio = bool(ov.prometheus_url and ov.ratio_trackers
+                             and (u["groups"] & set(ov.ratio_groups + ov.always_allow)))
+        tiles = ratios.get(ov) if can_see_ratio else []
         back = ov.public_url or request.host_url.rstrip("/")
         words = [w for w in u["name"].replace(".", " ").split() if w]
         initials = "".join(w[0] for w in words[:2]).upper() or u["user"][:1].upper()
@@ -80,7 +85,7 @@ def create_app(settings: Settings | None = None) -> Flask:
             "logout_url": f"{ov.auth_url}/logout?rd={quote(back + '/', safe='')}" if ov.auth_url else "",
         }
         return render_template("index.html", title=settings.title, user=u, account=account,
-                               services=rows, allowed=sum(r["allowed"] for r in rows))
+                               services=rows, ratios=tiles, allowed=sum(r["allowed"] for r in rows))
 
     @app.get("/api/services")
     def api_services():

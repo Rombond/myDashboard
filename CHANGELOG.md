@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Tracker ratio tiles (down / up / ratio) read from Prometheus, shown only to the groups listed under `ratio.groups`.
+
 ## 1.0.0
 
 First version.
