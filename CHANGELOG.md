@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.0.1
 
 - Profile pictures: "Change picture" in the account menu stores a resized JPEG in LLDAP (`LLDAP_URL`, `LLDAP_USER`, `LLDAP_PASSWORD`).
 - Tracker ratio tiles (down / up / ratio) read from Prometheus, shown only to the groups listed under `ratio.groups`.

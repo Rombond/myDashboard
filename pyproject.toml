@@ -1,6 +1,6 @@
 [project]
 name = "mydashboard"
-version = "1.0.0"
+version = "1.0.1"
 description = "Per-user service dashboard for Authelia-protected homelabs"
 requires-python = ">=3.11"
 dependencies = ["Flask>=3.0", "PyYAML>=6.0"]
