@@ -19,10 +19,15 @@ class Settings:
     trust_token: str = ""
     dev_mode: bool = False
     label_prefix: str = "dynacat"
+    lldap_url: str = ""         # e.g. http://lldap:17170; with user + password, enables profile pictures
+    lldap_user: str = ""
+    lldap_password: str = ""
 
     @classmethod
     def from_env(cls) -> Settings:
         e = os.environ.get
+        pw_file = e("LLDAP_PASSWORD_FILE", "")
+        password = Path(pw_file).read_text().strip() if pw_file else e("LLDAP_PASSWORD", "")
         return cls(
             docker_host=e("DOCKER_HOST", cls.docker_host).replace("tcp://", "http://"),
             rules_file=e("RULES_FILE", cls.rules_file),
@@ -32,7 +37,15 @@ class Settings:
             trust_token=e("TRUST_TOKEN", ""),
             dev_mode=e("DEV_MODE", "") == "1",
             label_prefix=e("LABEL_PREFIX", cls.label_prefix),
+            lldap_url=e("LLDAP_URL", ""),
+            lldap_user=e("LLDAP_USER", ""),
+            lldap_password=password,
         )
+
+
+    @property
+    def avatars(self) -> bool:
+        return bool(self.lldap_url and self.lldap_user and self.lldap_password)
 
 
 @dataclass

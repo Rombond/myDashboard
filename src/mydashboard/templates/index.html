@@ -8,15 +8,18 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+  {% macro pic(cls='') -%}
+    <span class="avatar{{ ' ' + cls if cls }}"><span>{{ account.initials }}</span>{% if avatars %}<img class="pic" src="{{ url_for('avatar_get') }}" alt="" onerror="this.remove()">{% endif %}</span>
+  {%- endmacro %}
   <header>
     <h1>{{ title }}</h1>
     <p class="who">{{ allowed }} / {{ services|length }} available</p>
     <input id="q" type="search" placeholder="Filter…" autocomplete="off" autofocus>
     <details class="me" id="me">
-      <summary class="avatar" title="{{ user.name }}" aria-label="Account menu">{{ account.initials }}</summary>
+      <summary title="{{ user.name }}" aria-label="Account menu">{{ pic() }}</summary>
       <div class="menu">
         <div class="id">
-          <span class="avatar big">{{ account.initials }}</span>
+          {{ pic('big') }}
           <div><strong>{{ user.name }}</strong><small>@{{ user.user }}</small>{% if user.email %}<small>{{ user.email }}</small>{% endif %}</div>
         </div>
         {% if user.groups %}<div class="groups">{% for g in user.groups|sort %}<span>{{ g }}</span>{% endfor %}</div>{% endif %}
@@ -27,6 +30,8 @@
             <label><input type="radio" name="theme" value="dark">Dark</label>
           </span>
         </div>
+        {% if avatars %}<label class="opt pick">Change picture<input type="file" id="pic" accept="image/*" hidden></label>
+        <small id="picmsg" role="status"></small>{% endif %}
         <label class="opt"><input type="checkbox" id="newtab" checked> Open apps in a new tab</label>
         {% if account.settings_url %}<a href="{{ account.settings_url }}" rel="noopener">Account settings</a>{% endif %}
         {% if account.logout_url %}<a class="out" href="{{ account.logout_url }}">Log out</a>{% endif %}
@@ -86,6 +91,24 @@
       applyTab(nt.checked);
     });
     document.addEventListener('click', e => { const m = document.getElementById('me'); if (!m.contains(e.target)) m.open = false; });
+    const pic = document.getElementById('pic');
+    if (pic) pic.addEventListener('change', async () => {
+      const msg = document.getElementById('picmsg'), f = pic.files[0];
+      if (!f) return;
+      msg.textContent = 'Uploading…';
+      const body = new FormData(); body.append('file', f);
+      try {
+        const r = await fetch('/avatar', { method: 'POST', body, headers: { 'X-Requested-With': 'mydashboard' } });
+        if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || 'Upload failed.');
+        document.querySelectorAll('.avatar').forEach(a => {
+          a.querySelector('img.pic')?.remove();
+          const i = new Image(); i.className = 'pic'; i.alt = ''; i.onerror = () => i.remove();
+          i.src = '/avatar?t=' + Date.now(); a.append(i);
+        });
+        msg.textContent = 'Picture updated.';
+      } catch (e) { msg.textContent = e.message; }
+      pic.value = '';
+    });
     const q = document.getElementById('q');
     q.addEventListener('input', () => {
       const v = q.value.trim().toLowerCase();

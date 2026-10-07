@@ -13,6 +13,9 @@ Two places: environment variables (set in your compose file) and `overrides.yml`
 | `DASHBOARD_TITLE` | `Services` | Page title. |
 | `LABEL_PREFIX` | `dynacat` | Label namespace to read (`<prefix>.name`, `.url`, `.icon`, `.description`). |
 | `TRUST_TOKEN` | empty | If set, every request must carry `X-Dashboard-Token: <value>` (add it in your proxy). |
+| `LLDAP_URL` | empty | Internal LLDAP address, e.g. `http://lldap:17170`. With the two below, enables "Change picture" in the account menu. |
+| `LLDAP_USER` | empty | LLDAP service account (needs the `lldap_admin` group to edit other users). |
+| `LLDAP_PASSWORD` / `LLDAP_PASSWORD_FILE` | empty | Its password, or a file holding it (Docker secret). |
 | `DEV_MODE` | empty | `1` = act as a dev user when no `Remote-User` header is present. Never use in production. |
 
 ## `overrides.yml`
@@ -79,3 +82,11 @@ ratio:
 ```
 
 Results are cached for `2 * CACHE_SECONDS`. A tracker without metrics shows "No data"; if Prometheus is unreachable every tile shows "No data". A ratio under 1 is shown in red.
+
+## Profile pictures (LLDAP)
+
+Users pick an image in the account menu. The dashboard resizes it to a 256 px JPEG and stores it in the user's LLDAP `avatar` attribute through LLDAP's GraphQL API, so LLDAP does not need to be reachable from the internet. Any app that reads `jpegPhoto` from LDAP shows it too.
+
+- Put the dashboard on LLDAP's Docker network and set the three `LLDAP_*` variables.
+- Create a dedicated service account for it. LLDAP only lets `lldap_admin` edit other users, so this account is powerful: keep its password in a secret and set `TRUST_TOKEN` so only your proxy can reach the dashboard.
+- The dashboard only ever reads or writes the user named by the `Remote-User` header. Uploads need an `X-Requested-With` header, so a foreign site cannot post a picture for a signed-in user.

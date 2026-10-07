@@ -77,3 +77,57 @@ def test_theme_switch_is_in_the_menu(client):
     html = client.get("/", headers={"Remote-User": "u", "Remote-Groups": "media"}).get_data(as_text=True)
     assert all(f'name="theme" value="{v}"' in html for v in ("auto", "light", "dark"))
     assert "mydashboard.theme" in html
+
+
+class FakeLldap:
+    def __init__(self):
+        self.saved = {}
+
+    def get_avatar(self, uid):
+        return self.saved.get(uid)
+
+    def set_avatar(self, uid, jpeg):
+        self.saved[uid] = jpeg
+
+
+@pytest.fixture
+def avatar_client(tmp_path, monkeypatch):
+    monkeypatch.setattr("mydashboard.app.fetch_containers", lambda host: [])
+    s = Settings(rules_file=str(tmp_path / "r.json"), overrides_file=str(tmp_path / "none.yml"), cache_seconds=0)
+    fake = FakeLldap()
+    return create_app(s, lldap=fake).test_client(), fake
+
+
+def _png():
+    import io
+
+    from PIL import Image
+    buf = io.BytesIO()
+    Image.new("RGBA", (300, 100), (255, 0, 0, 128)).save(buf, "PNG")
+    return buf.getvalue()
+
+
+def test_avatar_upload_is_jpeg_for_the_header_user_only(avatar_client):
+    import io
+    c, fake = avatar_client
+    h = {"Remote-User": "alice", "X-Requested-With": "mydashboard"}
+    r = c.post("/avatar", headers=h, data={"file": (io.BytesIO(_png()), "a.png")})
+    assert r.status_code == 204
+    assert list(fake.saved) == ["alice"] and fake.saved["alice"][:2] == b"\xff\xd8"
+    assert c.get("/avatar", headers={"Remote-User": "alice"}).mimetype == "image/jpeg"
+    assert c.get("/avatar", headers={"Remote-User": "bob"}).status_code == 404
+
+
+def test_avatar_rejects_missing_csrf_header_and_non_images(avatar_client):
+    import io
+    c, fake = avatar_client
+    data = {"file": (io.BytesIO(_png()), "a.png")}
+    assert c.post("/avatar", headers={"Remote-User": "alice"}, data=data).status_code == 403
+    bad = {"file": (io.BytesIO(b"nope"), "a.png")}
+    h = {"Remote-User": "alice", "X-Requested-With": "mydashboard"}
+    assert c.post("/avatar", headers=h, data=bad).status_code == 400
+    assert not fake.saved
+
+
+def test_avatar_disabled_without_lldap(client):
+    assert client.get("/avatar", headers={"Remote-User": "a"}).status_code == 404

@@ -7,11 +7,12 @@ import logging
 import time
 from urllib.parse import quote
 
-from flask import Flask, abort, jsonify, render_template, request
+from flask import Flask, Response, abort, jsonify, render_template, request
 
 from .access import build_catalog, load_rules, view_for
 from .config import Overrides, Settings, load_overrides
 from .discovery import fetch_containers, parse_containers
+from .lldap import Lldap, LldapError, to_jpeg
 from .ratio import RatioCache
 
 log = logging.getLogger("mydashboard")
@@ -43,9 +44,12 @@ class Catalog:
         return self._services
 
 
-def create_app(settings: Settings | None = None) -> Flask:
+def create_app(settings: Settings | None = None, lldap: Lldap | None = None) -> Flask:
     settings = settings or Settings.from_env()
+    if lldap is None and settings.avatars:
+        lldap = Lldap(settings.lldap_url, settings.lldap_user, settings.lldap_password)
     app = Flask(__name__)
+    app.config["MAX_CONTENT_LENGTH"] = 8 * 1024 * 1024
     catalog = Catalog(settings)
     ratios = RatioCache(settings.cache_seconds * 2)
 
@@ -85,16 +89,58 @@ def create_app(settings: Settings | None = None) -> Flask:
             "logout_url": f"{ov.auth_url}/logout?rd={quote(back + '/', safe='')}" if ov.auth_url else "",
         }
         return render_template("index.html", title=settings.title, user=u, account=account,
-                               services=rows, ratios=tiles, allowed=sum(r["allowed"] for r in rows))
+                               services=rows, ratios=tiles, avatars=lldap is not None,
+                               allowed=sum(r["allowed"] for r in rows))
 
     @app.get("/api/services")
     def api_services():
         u = current_user()
         return jsonify(user=u["user"], groups=sorted(u["groups"]), services=view_for(catalog.get(), u["groups"]))
 
+    @app.get("/avatar")
+    def avatar_get():
+        u = current_user()
+        if lldap is None:
+            abort(404)
+        try:
+            img = lldap.get_avatar(u["user"])
+        except LldapError as exc:
+            log.warning("avatar read failed: %s", exc)
+            abort(502)
+        if not img:
+            abort(404)
+        resp = Response(img, mimetype="image/jpeg")
+        resp.headers["Cache-Control"] = "private, max-age=60"
+        return resp
+
+    @app.post("/avatar")
+    def avatar_set():
+        u = current_user()
+        if lldap is None:
+            abort(404)
+        if request.headers.get("X-Requested-With") != "mydashboard":  # forces a CORS preflight: no cross-site forms
+            abort(403)
+        f = request.files.get("file")
+        if f is None:
+            return jsonify(error="No file."), 400
+        try:
+            jpeg = to_jpeg(f.read())
+        except ValueError:
+            return jsonify(error="That file is not an image."), 400
+        try:
+            lldap.set_avatar(u["user"], jpeg)
+        except LldapError as exc:
+            log.warning("avatar write failed: %s", exc)
+            return jsonify(error="Could not save the picture."), 502
+        return "", 204
+
+    @app.errorhandler(413)
+    def too_big(_):
+        return jsonify(error="Image too large (8 MB max)."), 413
+
     @app.after_request
     def headers(resp):
-        resp.headers["Cache-Control"] = "no-store"
+        resp.headers.setdefault("Cache-Control", "no-store")
         resp.headers["X-Content-Type-Options"] = "nosniff"
         resp.headers["Referrer-Policy"] = "no-referrer"
         return resp
