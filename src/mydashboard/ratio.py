@@ -40,12 +40,13 @@ def build_tiles(ov: Overrides, query=query_value) -> list[dict]:
             up = query(ov.prometheus_url, t.get("up") or f"{prefix}_total_uploaded_bytes")
         except Exception as exc:  # Prometheus down: stop early instead of waiting on every tracker
             log.warning("ratio query failed: %s", exc)
-            return [{"name": x["name"], "ok": False} for x in ov.ratio_trackers]
+            return [{"name": x["name"], "url": x.get("url", ""), "ok": False} for x in ov.ratio_trackers]
         if down is None or up is None:
-            tiles.append({"name": t["name"], "ok": False})
+            tiles.append({"name": t["name"], "url": t.get("url", ""), "ok": False})
             continue
         ratio = up / down if down else None
-        tiles.append({"name": t["name"], "ok": True, "down": human_bytes(down), "up": human_bytes(up),
+        tiles.append({"name": t["name"], "url": t.get("url", ""), "ok": True,
+                      "down": human_bytes(down), "up": human_bytes(up),
                       "ratio": f"{ratio:.2f}" if ratio is not None else "∞", "low": ratio is not None and ratio < 1})
     return tiles
 

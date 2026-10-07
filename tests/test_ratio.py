@@ -25,7 +25,7 @@ def test_tiles_ratio_low_and_missing():
     a, b, gone = build_tiles(ov(), fake)
     assert (a["ratio"], a["up"], a["low"]) == ("3.00", "3.00 TB", False)
     assert (b["ratio"], b["low"]) == ("0.50", True)
-    assert gone == {"name": "Gone", "ok": False}
+    assert gone == {"name": "Gone", "url": "", "ok": False}
 
 
 def test_prometheus_down_marks_all_unavailable():
@@ -59,3 +59,18 @@ def test_only_allowed_groups_see_ratios(tmp_path, monkeypatch):
 
     assert "Alpha" in page("torrents") and "Alpha" in page("admins")
     assert "Alpha" not in page("family")
+
+
+def test_ratio_tile_url_and_link(tmp_path, monkeypatch):
+    p = tmp_path / "o.yml"
+    p.write_text("ratio:\n  prometheus_url: http://prom:9090\n  groups: [torrents]\n  trackers:\n"
+                 "    - {name: Alpha, metric: a, url: 'https://alpha.example/'}\n"
+                 "    - {name: Beta, metric: b, url: 'javascript:alert(1)'}\n")
+    (tmp_path / "r.json").write_text(json.dumps({"entries": []}))
+    monkeypatch.setattr("mydashboard.app.fetch_containers", lambda host: [])
+    monkeypatch.setattr("mydashboard.ratio.RatioCache.get",
+                        lambda self, o, query=fake: build_tiles(o, fake))
+    c = create_app(Settings(rules_file=str(tmp_path / "r.json"), overrides_file=str(p), cache_seconds=0)).test_client()
+    html = c.get("/", headers={"Remote-User": "u", "Remote-Groups": "torrents"}).get_data(as_text=True)
+    assert 'href="https://alpha.example/"' in html
+    assert "javascript:" not in html

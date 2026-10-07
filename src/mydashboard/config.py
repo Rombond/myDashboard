@@ -94,6 +94,8 @@ def load_overrides(path: str) -> Overrides:
     ]
     for t in o.ratio_trackers:
         t.setdefault("metric", "")
+        url = str(t.get("url") or "")
+        t["url"] = url if url.startswith(("http://", "https://")) else ""   # no javascript: links
     o.hide = [norm(x) for x in data.get("hide", [])]
     o.services = {norm(k): (v or {}) for k, v in (data.get("services") or {}).items()}
     o.extra = list(data.get("extra", []))

@@ -41,12 +41,13 @@
   {% if ratios %}
   <section class="ratios" aria-label="Tracker ratios">
     {% for r in ratios %}
-      <div class="rcard{{ '' if r.ok else ' off' }}" data-name="{{ r.name|lower }}">
+      {% set rtag = 'a' if r.url else 'div' %}
+      <{{ rtag }} class="rcard{{ '' if r.ok else ' off' }}{{ ' link' if r.url }}" data-name="{{ r.name|lower }}"{% if r.url %} href="{{ r.url }}" target="_blank" rel="noopener noreferrer"{% endif %}>
         <strong>{{ r.name }}</strong>
         {% if r.ok %}
           <dl><div><dt>Down</dt><dd>{{ r.down }}</dd></div><div><dt>Up</dt><dd>{{ r.up }}</dd></div><div><dt>Ratio</dt><dd class="{{ 'low' if r.low }}">{{ r.ratio }}</dd></div></dl>
         {% else %}<small>No data</small>{% endif %}
-      </div>
+      </{{ rtag }}>
     {% endfor %}
   </section>
   {% endif %}
@@ -81,7 +82,7 @@
     // Per-browser preference; links default to a new tab (also when JS or storage is unavailable).
     const nt = document.getElementById('newtab');
     const KEY = 'mydashboard.newtab';
-    const applyTab = on => document.querySelectorAll('a.card').forEach(a => {
+    const applyTab = on => document.querySelectorAll('a.card, a.rcard').forEach(a => {
       if (on) { a.target = '_blank'; a.rel = 'noopener noreferrer'; } else { a.removeAttribute('target'); }
     });
     try { nt.checked = localStorage.getItem(KEY) !== '0'; } catch (e) {}

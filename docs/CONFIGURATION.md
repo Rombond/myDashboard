@@ -75,6 +75,7 @@ ratio:
   groups: [torrents, admins]
   trackers:
     - name: Tracker A
+      url: https://tracker-a.example/   # optional: makes the tile a link
       metric: tracker_a        # reads tracker_a_total_downloaded_bytes and tracker_a_total_uploaded_bytes
     - name: Tracker B
       down: b_downloaded       # or name both metrics yourself

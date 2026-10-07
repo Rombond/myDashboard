@@ -4,6 +4,7 @@
 
 - Profile pictures: "Change picture" in the account menu stores a resized JPEG in LLDAP (`LLDAP_URL`, `LLDAP_USER`, `LLDAP_PASSWORD`).
 - Tracker ratio tiles (down / up / ratio) read from Prometheus, shown only to the groups listed under `ratio.groups`.
+- Ratio tiles: optional `url` per tracker turns the tile into a link (http/https only).
 
 ## 1.0.0
 
